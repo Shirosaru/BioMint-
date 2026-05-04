@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 160" width="560" height="160">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#080f08"/>
+      <stop offset="100%" stop-color="#04080c"/>
+    </linearGradient>
+    <radialGradient id="hexInner" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#0d1f0d"/>
+      <stop offset="100%" stop-color="#040a04"/>
+    </radialGradient>
+    <filter id="glow" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="1.8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glow2" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <clipPath id="hexClip">
+      <polygon points="80,10 140.6,45 140.6,115 80,150 19.4,115 19.4,45"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="560" height="160" fill="url(#bgGrad)" rx="10"/>
+
+  <!-- Subtle corner accents -->
+  <circle cx="0" cy="0" r="60" fill="#4caf9608"/>
+  <circle cx="560" cy="160" r="80" fill="#70c0ff05"/>
+
+  <!-- Hex fill -->
+  <polygon points="80,10 140.6,45 140.6,115 80,150 19.4,115 19.4,45"
+           fill="url(#hexInner)"/>
+
+  <!-- Hex outer glow (soft) -->
+  <polygon points="80,10 140.6,45 140.6,115 80,150 19.4,115 19.4,45"
+           fill="none" stroke="#4caf96" stroke-width="3" opacity="0.18" filter="url(#glow2)"/>
+
+  <!-- Hex border -->
+  <polygon points="80,10 140.6,45 140.6,115 80,150 19.4,115 19.4,45"
+           fill="none" stroke="#4caf96" stroke-width="1.4" opacity="0.9" filter="url(#glow)"/>
+
+  <!-- DNA rungs (behind strands) -->
+  <g stroke="#1e3d2a" stroke-width="1.2" stroke-linecap="round" clip-path="url(#hexClip)">
+    <line x1="38.8" y1="95.6" x2="38.8" y2="64.4"/>
+    <line x1="52.5" y1="102"  x2="52.5" y2="58"/>
+    <line x1="66.3" y1="95.6" x2="66.3" y2="64.4"/>
+    <line x1="93.8" y1="64.4" x2="93.8" y2="95.6"/>
+    <line x1="107.5" y1="58"  x2="107.5" y2="102"/>
+    <line x1="121.3" y1="64.4" x2="121.3" y2="95.6"/>
+  </g>
+
+  <!-- DNA Strand 1 — Solana green -->
+  <polyline clip-path="url(#hexClip)" filter="url(#glow)"
+    fill="none" stroke="#4caf96" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+    points="25,80 28.4,84.3 31.9,88.4 35.3,92.2 38.8,95.6 42.2,98.3 45.6,100.3 49.1,101.6
+            52.5,102 55.9,101.6 59.4,100.3 62.8,98.3 66.3,95.6 69.7,92.2 73.1,88.4 76.6,84.3
+            80,80 83.4,75.7 86.9,71.6 90.3,67.8 93.8,64.4 97.2,61.7 100.6,59.7 104.1,58.4
+            107.5,58 110.9,58.4 114.4,59.7 117.8,61.7 121.3,64.4 124.7,67.8 128.1,71.6 131.6,75.7 135,80"/>
+
+  <!-- DNA Strand 2 — sky blue -->
+  <polyline clip-path="url(#hexClip)" filter="url(#glow)"
+    fill="none" stroke="#70c0ff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"
+    points="25,80 28.4,75.7 31.9,71.6 35.3,67.8 38.8,64.4 42.2,61.7 45.6,59.7 49.1,58.4
+            52.5,58 55.9,58.4 59.4,59.7 62.8,61.7 66.3,64.4 69.7,67.8 73.1,71.6 76.6,75.7
+            80,80 83.4,84.3 86.9,88.4 90.3,92.2 93.8,95.6 97.2,98.3 100.6,100.3 104.1,101.6
+            107.5,102 110.9,101.6 114.4,100.3 117.8,98.3 121.3,95.6 124.7,92.2 128.1,88.4 131.6,84.3 135,80"/>
+
+  <!-- Rung endpoint dots -->
+  <g clip-path="url(#hexClip)" filter="url(#glow)">
+    <!-- Strand-1 green dots -->
+    <circle cx="38.8"  cy="95.6" r="2.8" fill="#4caf96"/>
+    <circle cx="52.5"  cy="102"  r="3.2" fill="#4caf96"/>
+    <circle cx="66.3"  cy="95.6" r="2.8" fill="#4caf96"/>
+    <circle cx="93.8"  cy="64.4" r="2.8" fill="#4caf96"/>
+    <circle cx="107.5" cy="58"   r="3.2" fill="#4caf96"/>
+    <circle cx="121.3" cy="64.4" r="2.8" fill="#4caf96"/>
+    <!-- Strand-2 blue dots -->
+    <circle cx="38.8"  cy="64.4" r="2.8" fill="#70c0ff"/>
+    <circle cx="52.5"  cy="58"   r="3.2" fill="#70c0ff"/>
+    <circle cx="66.3"  cy="64.4" r="2.8" fill="#70c0ff"/>
+    <circle cx="93.8"  cy="95.6" r="2.8" fill="#70c0ff"/>
+    <circle cx="107.5" cy="102"  r="3.2" fill="#70c0ff"/>
+    <circle cx="121.3" cy="95.6" r="2.8" fill="#70c0ff"/>
+    <!-- Center crossing — Solana gold -->
+    <circle cx="80" cy="80" r="5" fill="#f0c040" filter="url(#glow2)"/>
+    <circle cx="80" cy="80" r="2.8" fill="#fff8e0"/>
+    <!-- Start / end dots -->
+    <circle cx="25"  cy="80" r="2.5" fill="#4caf96" opacity="0.55"/>
+    <circle cx="135" cy="80" r="2.5" fill="#4caf96" opacity="0.55"/>
+  </g>
+
+  <!-- Vertical divider -->
+  <line x1="162" y1="22" x2="162" y2="138" stroke="#1e2e1e" stroke-width="1" opacity="0.7"/>
+
+  <!-- "BioMint" wordmark -->
+  <text x="180" y="84"
+        font-family="'Segoe UI',system-ui,-apple-system,BlinkMacSystemFont,sans-serif"
+        font-size="48" font-weight="700" letter-spacing="-1.5">
+    <tspan fill="#deeede">Bio</tspan><tspan fill="#4caf96">Mint</tspan>
+  </text>
+
+  <!-- Tagline -->
+  <text x="181" y="106"
+        font-family="'Segoe UI',system-ui,-apple-system,BlinkMacSystemFont,sans-serif"
+        font-size="12.5" fill="#3d5e3d" letter-spacing="0.35">
+    Verifiable Clinical Data Exchange on Solana
+  </text>
+
+  <!-- Badge row -->
+  <!-- Solana -->
+  <rect x="181" y="120" width="72" height="20" rx="10"
+        fill="#091510" stroke="#1c4e30" stroke-width="1"/>
+  <text x="217" y="134"
+        font-family="'Segoe UI',system-ui,sans-serif"
+        font-size="9.5" fill="#4caf96" text-anchor="middle" letter-spacing="0.6">&#9673; SOLANA</text>
+
+  <!-- Ed25519 -->
+  <rect x="259" y="120" width="78" height="20" rx="10"
+        fill="#090f17" stroke="#1c304e" stroke-width="1"/>
+  <text x="298" y="134"
+        font-family="'Segoe UI',system-ui,sans-serif"
+        font-size="9.5" fill="#70c0ff" text-anchor="middle" letter-spacing="0.4">Ed25519 &#10003;</text>
+
+  <!-- x402 -->
+  <rect x="343" y="120" width="58" height="20" rx="10"
+        fill="#141000" stroke="#352c00" stroke-width="1"/>
+  <text x="372" y="134"
+        font-family="'Segoe UI',system-ui,sans-serif"
+        font-size="9.5" fill="#c8b430" text-anchor="middle" letter-spacing="0.4">x402 pay</text>
+
+  <!-- MIT -->
+  <rect x="407" y="120" width="46" height="20" rx="10"
+        fill="#111111" stroke="#2a2a2a" stroke-width="1"/>
+  <text x="430" y="134"
+        font-family="'Segoe UI',system-ui,sans-serif"
+        font-size="9.5" fill="#666" text-anchor="middle" letter-spacing="0.5">MIT</text>
+</svg>

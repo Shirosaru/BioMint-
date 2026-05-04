@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/logo.svg" alt="BioMint — Verifiable Clinical Data Exchange" width="560"/>
+</p>
+
 # BioMint — Verifiable Clinical Data Exchange
 
 > **Solana Frontier Hackathon 2026**
