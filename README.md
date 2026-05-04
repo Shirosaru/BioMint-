@@ -40,11 +40,29 @@ The hub **never owns patient data**. Raw readings stay on the patient's device. 
 
 ```bash
 npm install
+
+# Free ports if needed, then start
+lsof -ti:3000,3100 | xargs kill -9 2>/dev/null
 npm run dashboard
 # open http://localhost:3000
 ```
 
-The dashboard server spawns the oracle agent automatically and monitors it. Click **▶ Run Session** to simulate 6 patients and 5 buyers.
+The dashboard server spawns the oracle agent automatically. If port 3000 is busy it will automatically try 3001, 3002, etc. — check the terminal output for the actual URL.
+
+Click **▶ Run Session** to simulate 6 patients and 5 buyers.
+
+### Verify it's working
+
+```bash
+# Dashboard stats
+curl http://localhost:3000/api/market/stats
+
+# Oracle agent status (should show ready: true)
+curl http://localhost:3000/api/oracle/status
+
+# Trigger a simulation via API
+curl -X POST http://localhost:3000/api/market/simulate
+```
 
 ### Run headless demo
 
