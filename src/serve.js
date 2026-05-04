@@ -74,7 +74,7 @@ function spawnOracleAgent() {
   });
 }
 
-spawnOracleAgent();
+// Oracle is spawned inside startListening() once the port is confirmed
 
 // Ensure oracle is killed when serve.js exits
 process.on("exit",    () => oracleProc?.kill());
@@ -161,8 +161,27 @@ async function handler(req, res) {
 }
 
 const server = createServer(handler);
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`BioMint dashboard → http://localhost:${PORT}`);
-  console.log(`API               → http://localhost:${PORT}/api/market/stats`);
-  console.log(`Oracle agent      → port ${ORACLE_PORT} (spawning…)`);
+
+let serverStarted = false;
+function startListening(port) {
+  server.listen(port, "0.0.0.0", () => {
+    if (serverStarted) return;
+    serverStarted = true;
+    console.log(`BioMint dashboard → http://localhost:${port}`);
+    console.log(`API               → http://localhost:${port}/api/market/stats`);
+    console.log(`Oracle agent      → port ${ORACLE_PORT} (spawning…)`);
+    spawnOracleAgent();
+  });
+}
+
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    const next = (err.port ?? PORT) + 1;
+    console.warn(`[warn] port ${err.port ?? PORT} in use — trying ${next}…`);
+    startListening(next);
+  } else {
+    throw err;
+  }
 });
+
+startListening(PORT);
