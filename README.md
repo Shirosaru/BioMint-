@@ -1,14 +1,181 @@
-# Agentic Mint Guard MVP
+# BioMint — Verifiable Clinical Data Exchange
 
-Autonomous mint policy engine for stablecoin risk control.
+> **Solana Frontier Hackathon 2026**
 
-This MVP demonstrates:
-- continuous risk scoring (volatility, liquidity, oracle divergence, concentration)
-- automatic policy actions (`hold`, `tighten`, `pause-and-tighten`, `relax`)
-- signed decision attestations (`data/attestations.ndjson`)
-- a stress simulation that shows LTV and mint cap changes in real time
+A decentralised micropayment hub on Solana where patients tokenise their health data and get paid automatically — only when their data provably improves a buyer's AI model. A standalone oracle agent signs every evaluation with Ed25519. No signature, no payment.
 
-## 48-hour Build Plan
+---
+
+## The Problem
+
+Pharmaceutical companies and AI health labs (Eli Lilly, AstraZeneca, DeepMed) need high-quality longitudinal patient data to train better models — glucose logs, genomic panels, blood biomarkers, immune profiles. Patients generate this data every day and see none of the value. Centralised data brokers (Veeva, IQVIA) intermediate, take the margin, and provide no verifiable provenance to buyers.
+
+Solana's sub-cent fees make per-dataset micropayments viable. x402 lets a payment settle in the same HTTP round-trip as evaluation. Autonomous agents mean the entire evaluate-to-settle loop runs without human intervention.
+
+---
+
+## How It Works
+
+```
+Patient device        BioMint Oracle Agent       Pharma / AI buyer
+ (Dexcom G7)        ──────────────────────────   (Eli Lilly)
+ glucose readings ──▶ tokenize (hash only)   ──▶ evaluate dataset
+ consent token    ──▶ sign result (Ed25519)  ──▶ verify oracle sig
+ Solana wallet    ◀── SOL micropayment       ◀── x402 if delta > threshold
+```
+
+**Only useful data earns money.** If a dataset does not meaningfully shift the model accuracy metric, no payment fires. Junk data earns $0.
+
+The hub **never owns patient data**. Raw readings stay on the patient's device. Only SHA-256 Merkle roots and pseudonymous HMAC-derived IDs go on-chain.
+
+---
+
+## Quick Start
+
+### Run the full dashboard
+
+```bash
+npm install
+npm run dashboard
+# open http://localhost:3000
+```
+
+The dashboard server spawns the oracle agent automatically and monitors it. Click **▶ Run Session** to simulate 6 patients and 5 buyers.
+
+### Run headless demo
+
+```bash
+npm run biomint
+```
+
+### Keep state across runs
+
+```bash
+npm run biomint:keep
+```
+
+---
+
+## Dataset Types
+
+| Type | Device examples | Typical value |
+|---|---|---|
+| `CGM_TIMESERIES` | Dexcom G7 / G6 | $0.02–$0.08 per 14-day batch |
+| `LIBRE_FLASH` | FreeStyle Libre 3 | $0.01–$0.04 per session |
+| `GENOME_VARIANT` | Illumina GSA / 23andMe | $0.05–$0.22 per panel |
+| `LIFESTYLE_CORR` | CGM + Apple Health | $0.02–$0.06 per dataset |
+| `BLOOD_BIOMARKER` | Routine blood draw | $0.03–$0.12 per panel |
+| `IMMUNE_PANEL` | Flow cytometry / ELISA | $0.08–$0.40 per profile |
+
+---
+
+## Model Tasks
+
+| Task | Metric | Buyers |
+|---|---|---|
+| `T2D_GLUCOSE_PREDICTION` | RMSE | Eli Lilly, DeepMed |
+| `HYPOGLYCEMIA_ALERT` | AUROC | Eli Lilly |
+| `GENOME_T2D_RISK` | AUROC | GenoCo Research |
+| `DRUG_RESPONSE_TIRZEPATIDE` | AUROC | Eli Lilly |
+| `INSULIN_SENSITIVITY` | RMSE | DeepMed |
+| `MEAL_SPIKE_PHENOTYPING` | AUROC | DeepMed |
+| `ANTIBODY_RESPONSE` | AUROC | AstraZeneca |
+| `AUTOIMMUNE_RISK` | AUROC | AstraZeneca |
+| `INFLAMMATION_TRAJECTORY` | RMSE | InfLab |
+
+---
+
+## Verifiable Compute Layer
+
+The oracle agent (`src/oracleAgent.js`) is a standalone autonomous process:
+
+- Generates its own **Ed25519 keypair** on first start (`data/keys/oracle_*.pem`)
+- Exposes `POST /evaluate` — runs the model delta computation and **signs the result**
+- The dashboard server calls `crypto.verify()` against the oracle's public key before any payment settles
+- If verification fails → status is `UNVERIFIED`, payment is blocked
+- The oracle pubkey is displayed live in the dashboard header
+
+```bash
+npm run oracle   # run oracle agent standalone on port 3100
+```
+
+---
+
+## Privacy Design
+
+| Mechanism | Detail |
+|---|---|
+| No PII on-chain | Only SHA-256 Merkle roots of anonymised readings |
+| Consent tokens | HMAC-signed, patient-held, expire in 365 days |
+| Pseudonymous IDs | `HMAC(consent_token)` → irreversible contributor ID |
+| Time-shifted records | Timestamps offset ±12 h per patient to prevent calendar correlation |
+| ZK commitments | `generateDataCommitment()` → (commitment, blindingFactor) for selective disclosure |
+
+---
+
+## On-Chain Settlement
+
+Anchor program (`programs/data-market/src/lib.rs`) stores `DatasetRecord` PDAs derived from `["dataset", contributor_pubkey, content_hash]`. Settlement requires **two signers**: the buyer (transfers SOL) and the BioMint oracle (attests the delta). Neither party can fabricate a payment alone.
+
+```rust
+pub fn settle_improvement(
+    ctx: Context<SettleImprovement>,
+    delta_bps: u32,
+    payment_lamports: u64,
+) -> Result<()>
+```
+
+Program ID: `BMint1111111111111111111111111111111111111111` (devnet)
+
+---
+
+## Architecture
+
+```
+src/
+  oracleAgent.js     Standalone oracle — Ed25519 signing, model evaluation
+  dataMarket.js      Market lifecycle — list, evaluate, settle, ledger
+  clinicalData.js    Dataset tokenization, quality gates, 6 types
+  modelOracle.js     Improvement scoring, 9 model tasks, payment formula
+  privacyLayer.js    Consent tokens, PII scrubbing, ZK hash commitments
+  demoClinical.js    End-to-end demo — 6 patients, 5 buyers
+  serve.js           Dashboard HTTP server + oracle agent lifecycle manager
+  attestation.js     Ed25519 key management, signed decision records
+
+programs/
+  data-market/       Anchor program — DatasetRecord PDA, settle_improvement
+  policy-registry/   Stablecoin policy registry (original Mint Guard engine)
+
+public/
+  dashboard.html     Judge-facing single-file dashboard
+
+data/
+  .gitkeep           Placeholder — runtime state files are gitignored
+```
+
+---
+
+## Stack
+
+- **Solana** — on-chain settlement, Anchor PDAs, devnet
+- **x402** — HTTP 402 micropayment protocol for per-dataset SOL transfers
+- **Node.js ESM** — dashboard server, oracle agent, market engine
+- **Ed25519** (Node.js `crypto`) — oracle evaluation signatures
+- **Anchor / cargo-build-sbf** — Rust on-chain program
+- **HMAC-SHA256** — consent tokens, pseudonymous IDs
+- **NDJSON** — append-only tamper-evident event ledger
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE)
+
+---
+
+<!-- original build plan and internal notes: see hackathon_notes.sh (gitignored) -->
+
+## Build History (archived below)
 
 ### Phase 1 (0-8h): Foundations
 - finalize policy state schema (`paused`, `maxLtvBps`, `mintCapUsd`, `version`)
@@ -62,144 +229,4 @@ Run one-shot with a clean reset:
 npm run agent:once:reset
 ```
 
-## Files
-
-- `src/risk.js`: risk scoring model
-- `src/policyEngine.js`: autonomous policy decisions
-- `src/registry.js`: state persistence (stand-in for on-chain registry)
-- `src/attestation.js`: key management and signed attestations
-- `src/demo.js`: stress scenario runner
-- `contracts/policy_registry_anchor.rs`: Anchor contract skeleton for migration on-chain
-
----
-
-## BioMint — Clinical Data Exchange (Extension)
-
-A decentralised micropayment hub for clinical health data built on the same
-Solana infrastructure as the Mint Guard policy engine.
-
-### The Problem
-
-Pharmaceutical companies (Eli Lilly, Novo Nordisk, Roche) and AI health
-labs need high-quality longitudinal data — CGM glucose records from Dexcom
-and FreeStyle Libre users, genomic variant panels with T2D loci — to train
-better diabetes models.  Patients generate this data but see none of the
-value.  Centralised data brokers take the margin.
-
-### The BioMint Model
-
-```
-Patient device          BioMint Market          Pharma / AI buyer
-  (Dexcom G7)         ─────────────────────     (Eli Lilly)
-  Glucose readings ──▶ tokenize (hash only) ──▶ evaluate dataset
-  Consent token    ──▶ list on market       ──▶ score model delta
-  Solana pubkey    ◀── micropayment         ◀── x402 payment if delta > threshold
-```
-
-**Only useful data earns money.**  If a dataset does not meaningfully improve
-the buyer's model (measured as accuracy / RMSE delta vs a threshold), no
-payment fires.  Junk data accumulates $0.
-
-The hub never owns any patient data.  Raw readings stay on patient devices.
-Only Merkle content hashes and pseudonymous contributor IDs go on-chain.
-
-### Supported Dataset Types
-
-| Type | Device examples | Typical value |
-|---|---|---|
-| `CGM_TIMESERIES` | Dexcom G7, G6 | $0.02–$0.08 per 14-day batch |
-| `LIBRE_FLASH` | FreeStyle Libre 3, 2 | $0.01–$0.04 per session log |
-| `GENOME_VARIANT` | Illumina GSA, 23andMe raw | $0.05–$0.22 per panel |
-| `LIFESTYLE_CORR` | Paired CGM + Apple Health | $0.02–$0.06 per dataset |
-
-### Model Tasks
-
-Buyers specify which prediction task they are training:
-
-- `T2D_GLUCOSE_PREDICTION` — next-60-min glucose from 3 h of CGM (RMSE)
-- `HYPOGLYCEMIA_ALERT` — 30-min hypo risk classifier (AUC)
-- `GENOME_T2D_RISK` — polygenic risk score (AUC)
-- `DRUG_RESPONSE_TIRZEPATIDE` — Lilly tirzepatide 12-week HbA1c response (AUC)
-- `INSULIN_SENSITIVITY` — sensitivity index from CGM + lifestyle (RMSE)
-- `MEAL_SPIKE_PHENOTYPING` — post-meal spike phenotype classifier (AUC)
-
-### Quick Start — BioMint Demo
-
-```bash
-cd agentic-mint-guard
-npm run biomint
-```
-
-Output shows:
-
-1. **Tokenization** — 5 synthetic patient datasets (Dexcom CGM, Libre, genome)
-2. **Listings** — all datasets listed with ask prices and compatible tasks
-3. **Evaluations** — Lilly, DeepMed, and GenoCo evaluate each listing
-4. **Payments** — only datasets that moved the model needle get paid
-5. **Earnings summary** — per-contributor totals and market-wide stats
-
-To keep state across runs (cumulative payments):
-
-```bash
-npm run biomint:keep
-```
-
-### Architecture
-
-```
-src/
-  privacyLayer.js    Consent tokens, PII scrubbing, ZK hash commitments
-  clinicalData.js    Dataset tokenization, quality gates, synthetic generators
-  modelOracle.js     Improvement scoring, payment formula, simulated evaluation
-  dataMarket.js      Listings, queries, settlement, market ledger
-  demoClinical.js    End-to-end demo runner
-
-programs/data-market/
-  src/lib.rs         Anchor program — DatasetRecord PDA, settle_improvement ix
-
-data/
-  market_listings.json   Current listing states
-  market_ledger.ndjson   Append-only event log (LIST / EVALUATE / DELIST)
-  market_stats.json      Aggregated market statistics
-  attestations.ndjson    Ed25519-signed improvement attestations (shared with Mint Guard)
-```
-
-### On-Chain Settlement (Anchor Program)
-
-The `data-market` program stores `DatasetRecord` PDAs derived from
-`["dataset", contributor_pubkey, content_hash]`.  Settlement requires
-**two signers**: the buyer (transfers SOL) and the BioMint oracle
-(attests the evaluation delta).  This prevents either party from
-fabricating payments.
-
-```rust
-pub fn settle_improvement(
-    ctx: Context<SettleImprovement>,
-    delta_bps: u32,
-    payment_lamports: u64,
-) -> Result<()>
-```
-
-### Privacy Design
-
-- **No PII on-chain** — only SHA-256 Merkle roots of anonymised readings
-- **Consent tokens** — HMAC-signed, patient-held, expire in 365 days
-- **Pseudonymous IDs** — HMAC(consent_token) → irreversible contributor ID
-- **Time-shifted records** — timestamps shifted by deterministic per-patient offset (±12 h) to prevent calendar correlation
-- **ZK commitments** — `generateDataCommitment()` produces (commitment, blindingFactor) for selective disclosure without revealing raw data
-
----
-
-## Judge Demo Script (5 min)
-
-1. Show baseline scenario with `relax` (healthy market).
-2. Run volatility spike and show `pause-and-tighten` action.
-3. Run oracle divergence attack and show `pause-and-tighten`.
-4. Open `data/policy_state.json` to show final policy values.
-5. Open `data/attestations.ndjson` and verify decisions are signed and explainable.
-
-## Next Steps
-
-- Replace file registry with Solana account writes.
-- Add liquidation-aware debt constraints.
-- Add multi-agent quorum before `pause-and-tighten` actions.
+## Build History (archived below)

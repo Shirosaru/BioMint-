@@ -24,3 +24,6 @@ data/policy_state.json
 .env
 *.env.local
 .vscode/settings.json
+
+# Internal hackathon notes — not for public repo
+hackathon_notes.sh
