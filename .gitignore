@@ -27,3 +27,4 @@ data/policy_state.json
 
 # Internal hackathon notes — not for public repo
 hackathon_notes.sh
+demo_script.sh
