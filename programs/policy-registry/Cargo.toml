@@ -1,0 +1,19 @@
+[package]
+name = "policy-registry"
+version = "0.1.0"
+description = "Agentic mint-guard on-chain policy registry"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "policy_registry"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.30.1"

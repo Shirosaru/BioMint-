@@ -1,0 +1,19 @@
+[features]
+seeds = false
+skip-lint = false
+
+[programs.devnet]
+policy_registry = "7XT3UzsbuaPU9KsecRpC9EsGP7sX8QKuxPPgUtxFk1Pn"
+
+[programs.localnet]
+policy_registry = "7XT3UzsbuaPU9KsecRpC9EsGP7sX8QKuxPPgUtxFk1Pn"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "Localnet"
+wallet = "data/admin-keypair.json"
+
+[scripts]
+test = "node tests/policy_registry.test.js"

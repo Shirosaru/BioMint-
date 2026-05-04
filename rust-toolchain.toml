@@ -1,0 +1,7 @@
+[toolchain]
+# Rust >= 1.85.0 required: stabilizes edition2024 in Cargo.toml manifests.
+# Solana CLI 2.1.x bundles nightly 1.82 (Aug 2024) which CANNOT parse manifests
+# that use `edition = "2024"` (e.g. toml_edit 0.25+, block-buffer 0.12+).
+# Using stable (>= 1.85) as the host toolchain for cargo build-sbf resolves this.
+channel = "stable"
+components = ["rustfmt", "clippy"]

@@ -1,0 +1,19 @@
+[package]
+name = "data-market"
+version = "0.1.0"
+description = "BioMint clinical data exchange — on-chain dataset registry and micropayment settlement"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "data_market"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.30.1"
